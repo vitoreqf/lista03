@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Produto:</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="wrapper">
+            <header>
+                <h1>CRUD</h1>
+            </header>
+
+            <main>
+                <h2>Cadastrar Nome:</h2>
+
+                <div class="form-control">
+                    <label for="name">Nome:</label>
+                    <input type="text" id="name">
+                </div>
+
+                <ul id="usersList"></ul>
+
+                <button type="button" onclick="addName()">Enviar</button>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        var db;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadDataBase();
+        });
+
+        function loadDataBase() {
+            var request = indexedDB.open('users', 1);
+
+            request.onupgradeneeded = function (event) {
+                var db = event.target.result;
+                var objectStore = db.createObjectStore('Users', { keyPath: 'id', autoIncrement: true });
+                objectStore.createIndex('userIndex', 'user', { unique: false });
+            };
+
+            request.onsuccess = function (event) {
+                db = event.target.result;
+                updateUserList();
+            };
+
+            request.onerror = function (event) {
+                console.log("Erro ao abrir o banco de dados: ", event.target.errorCode);
+            };
+        }
+
+        function addName() {
+            var name = document.getElementById('name').value;
+
+            var transaction = db.transaction(['Users'], 'readwrite');
+            var objectStore = transaction.objectStore('Users');
+            var request = objectStore.add({ name });
+
+            request.onsuccess = function (event) {
+                console.log('Nome adicionado com sucesso.');
+                updateUserList();
+            };
+
+            request.onerror = function (event) {
+                console.log('Erro ao adicionar nome: ', event.target.errorCode);
+            };
+        }
+
+        function updateUserList() {
+            var transaction = db.transaction(['Users'], 'readonly');
+            var objectStore = transaction.objectStore('Users');
+            var request = objectStore.getAll();
+
+            request.onsuccess = function (event) {
+                var names = event.target.result;
+                renderUserList(names);
+            };
+
+            request.onerror = function (event) {
+                console.log('Erro ao ler nomes: ', event.target.errorCode);
+            };
+        }
+
+        function renderUserList(names) {
+            var usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+
+            names.forEach(function (name) {
+                var li = document.createElement('li');
+                li.textContent = name.name;
+                li.appendChild(createEditButton(name.id, name.name));
+                li.appendChild(createDeleteButton(name.id));
+                usersList.appendChild(li);
+            });
+        }
+
+        function createEditButton(id, currentName) {
+            var button = document.createElement('button');
+            button.textContent = 'Editar';
+            button.onclick = function () {
+                var name = prompt('Editar nome:', currentName);
+                if (name !== null) {
+                    updateName(id, name);
+                }
+            };
+            return button;
+        }
+
+        function createDeleteButton(id) {
+            var button = document.createElement('button');
+            button.textContent = 'Excluir';
+            button.onclick = function () {
+                deleteName(id);
+            };
+            return button;
+        }
+
+        function updateName(id, name) {
+            var transaction = db.transaction(['Users'], 'readwrite');
+            var objectStore = transaction.objectStore('Users');
+            var request = objectStore.put({ id: id, name: name });
+
+            request.onsuccess = function (event) {
+                console.log('Nome atualizado com sucesso.');
+                updateUserList();
+            };
+
+            request.onerror = function (event) {
+                console.log('Erro ao atualizar nome: ', event.target.errorCode);
+            };
+        }
+
+        function deleteName(id) {
+            var transaction = db.transaction(['Users'], 'readwrite');
+            var objectStore = transaction.objectStore('Users');
+            var request = objectStore.delete(id);
+
+            request.onsuccess = function (event) {
+                console.log('Nome excluído com sucesso.');
+                updateUserList();
+            };
+
+            request.onerror = function (event) {
+                console.log('Erro ao excluir nome: ', event.target.errorCode);
+            };
+        }
+    </script>
+</body>
+
+</html>
