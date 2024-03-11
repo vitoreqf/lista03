@@ -12,7 +12,7 @@
   <h3>Clone o projeto e acesse a pasta:</h3>
 
   ```bash
-  $ git clone git@github.com:vitoreqf/lista02.git && cd lista02
+  $ git clone git@github.com:vitoreqf/lista03.git && cd lista03
   ```
 
   <h3>Siga os passos abaixo para executar a aplicação localmente:</h3>
